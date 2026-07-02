@@ -1,0 +1,24 @@
+# Editor
+.vscode
+*.iml
+.idea
+
+# Dependencies
+node_modules
+
+# Build artifacts — keep main.js so users can install without building
+*.map
+
+# Obsidian user data (saved plugin settings — personal, not part of the plugin)
+data.json
+
+# macOS
+.DS_Store
+
+# npm/node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript incremental build cache
+*.tsbuildinfo

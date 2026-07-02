@@ -1,0 +1,10 @@
+{
+	"id": "swipe-gesture-commands",
+	"name": "Swipe Gesture Commands",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "Two-finger trackpad swipes mapped to any command.",
+	"author": "Justin Rosales",
+	"authorUrl": "https://github.com/justinrosales",
+	"isDesktopOnly": true
+}

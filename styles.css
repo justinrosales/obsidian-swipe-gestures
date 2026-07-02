@@ -1,0 +1,27 @@
+#swipe-gesture-overlay {
+	position: fixed;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 44px;
+	height: 96px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	color: rgba(255, 255, 255, 0.95);
+	background: rgba(28, 28, 30, 0.82);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	pointer-events: none;
+	z-index: 99999;
+	opacity: 0;
+	transition: opacity 80ms ease-out;
+}
+
+#swipe-gesture-overlay.left  { border-radius: 0 48px 48px 0; }
+#swipe-gesture-overlay.right { border-radius: 48px 0 0 48px; }
+#swipe-gesture-overlay.visible  { opacity: 1; }
+#swipe-gesture-overlay.fade-out {
+	transition: opacity 200ms ease-out;
+	opacity: 0;
+}
