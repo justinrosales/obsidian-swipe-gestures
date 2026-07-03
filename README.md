@@ -34,7 +34,7 @@ That's it — no build step needed, `main.js` is included in the repo.
 ```bash
 cd <your vault>/.obsidian/plugins
 git clone https://github.com/justinrosales/obsidian-swipe-gestures
-cd obsidian-swipe-gesture-commands
+cd obsidian-swipe-gestures
 npm install
 npm run build
 ```
