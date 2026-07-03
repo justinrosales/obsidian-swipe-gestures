@@ -1,4 +1,12 @@
-import { App, ItemView, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+	App,
+	ItemView,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	SliderComponent,
+	TextComponent,
+} from "obsidian";
 
 /* -------------------------------------------------------------------------- */
 /*  Obsidian internals                                                         */
@@ -165,6 +173,48 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 		return options;
 	}
 
+	private addSliderWithInput(
+		setting: Setting,
+		opts: {
+			min: number;
+			max: number;
+			step: number;
+			get: () => number;
+			set: (v: number) => void;
+		}
+	) {
+		const { min, max, step } = opts;
+		const decimals = step < 1 ? (String(step).split(".")[1] ?? "").length : 0;
+		let slider!: SliderComponent;
+		let text!: TextComponent;
+
+		setting
+			.addSlider((s) => {
+				slider = s
+					.setLimits(min, max, step)
+					.setValue(opts.get())
+					.setDynamicTooltip()
+					.onChange(async (v) => {
+						opts.set(v);
+						text.setValue(v.toFixed(decimals));
+						await this.plugin.saveSettings();
+					});
+			})
+			.addText((t) => {
+				text = t;
+				t.inputEl.type = "number";
+				t.inputEl.style.width = "3.5em";
+				t.setValue(opts.get().toFixed(decimals)).onChange(async (v) => {
+					const num = Number(v);
+					if (Number.isNaN(num)) return;
+					const clamped = Math.min(max, Math.max(min, num));
+					opts.set(clamped);
+					slider.setValue(clamped);
+					await this.plugin.saveSettings();
+				});
+			});
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -208,40 +258,38 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl)
-			.setName("Swipe sensitivity")
-			.setDesc(
-				"How light a swipe needs to be to trigger. " +
-				"Low (2) = fires on the slightest flick. " +
-				"High (20) = requires a more deliberate, forceful swipe."
-			)
-			.addSlider((s) =>
-				s
-					.setLimits(2, 20, 1)
-					.setValue(this.plugin.settings.minDeltaX)
-					.setDynamicTooltip()
-					.onChange(async (v) => {
-						this.plugin.settings.minDeltaX = v;
-						await this.plugin.saveSettings();
-					})
-			);
+		this.addSliderWithInput(
+			new Setting(containerEl)
+				.setName("Swipe sensitivity")
+				.setDesc(
+					"How light a swipe needs to be to trigger. " +
+					"Low (2) = fires on the slightest flick. " +
+					"High (60) = requires a hard, deliberate swipe."
+				),
+			{
+				min: 2,
+				max: 60,
+				step: 1,
+				get: () => this.plugin.settings.minDeltaX,
+				set: (v) => (this.plugin.settings.minDeltaX = v),
+			}
+		);
 
-		new Setting(containerEl)
-			.setName("Horizontal dominance")
-			.setDesc(
-				"How purely horizontal your swipe must be. " +
-				"Low (1.0) = diagonal swipes count. " +
-				"High (4.0) = only nearly straight left/right swipes count."
-			)
-			.addSlider((s) =>
-				s
-					.setLimits(1, 4, 0.1)
-					.setValue(this.plugin.settings.dominanceRatio)
-					.setDynamicTooltip()
-					.onChange(async (v) => {
-						this.plugin.settings.dominanceRatio = v;
-						await this.plugin.saveSettings();
-					})
-			);
+		this.addSliderWithInput(
+			new Setting(containerEl)
+				.setName("Horizontal dominance")
+				.setDesc(
+					"How purely horizontal your swipe must be. " +
+					"Low (1.0) = diagonal swipes count. " +
+					"High (4.0) = only nearly straight left/right swipes count."
+				),
+			{
+				min: 1,
+				max: 4,
+				step: 0.1,
+				get: () => this.plugin.settings.dominanceRatio,
+				set: (v) => (this.plugin.settings.dominanceRatio = v),
+			}
+		);
 	}
 }
