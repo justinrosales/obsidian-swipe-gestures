@@ -1,12 +1,14 @@
-# Swipe Gesture Commands
+# Horizontal Swipe Gestures
 
 An [Obsidian](https://obsidian.md) plugin that maps two-finger horizontal trackpad swipes to any Obsidian command — by default, back and forward navigation.
+
+I built this to bring the same back/forward navigation experience from web browsing to Obsidian using two-finger horizontal trackpad swipes.
 
 ## How it works
 
 This plugin listens to the browser scroll wheel API (`WheelEvent`), which is the standard way web and Electron apps receive trackpad input on any platform. The plugin reads those values, determines if the movement is horizontal enough, and fires the configured command.
 
-This approach means the plugin is **not** relying on any proprietary Apple gesture API — it works wherever `WheelEvent.deltaX` is available, which covers macOS, Windows, and Linux trackpads, as well as mice with horizontal scroll wheels.
+This approach means the plugin is **not** relying on any proprietary Apple gesture API.
 
 ## Features
 
@@ -25,9 +27,9 @@ This approach means the plugin is **not** relying on any proprietary Apple gestu
 cd <your vault>/.obsidian/plugins
 git clone https://github.com/justinrosales/obsidian-swipe-gestures
 ```
-2. Reload Obsidian and enable **Swipe Gesture Commands** in **Settings → Community Plugins**
+2. Reload Obsidian and enable **Horizontal Swipe Gestures** in **Settings → Community Plugins**
 
-That's it — no build step needed, `main.js` is included in the repo.
+No build step needed, `main.js` is included in the repo.
 
 ### From source
 
@@ -51,9 +53,12 @@ Then reload Obsidian and enable the plugin.
 | **Swipe sensitivity** | How light a swipe needs to be to trigger. Low = fires on a light flick, High = requires a more deliberate swipe |
 | **Horizontal dominance** | How purely horizontal the swipe must be. Low = diagonal swipes count, High = only straight left/right swipes count |
 
-## Releasing a new version
 
-1. Update the version in `manifest.json` and `versions.json`
-2. Run `npm version patch` (or `minor` / `major`) to bump `package.json` and tag the commit
-3. Create a GitHub release with that tag and attach `main.js` and `manifest.json`
+## Author
+
+[justinrosales](https://github.com/justinrosales)
+
+## Credits
+
+Built on the [Obsidian Sample Plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template.
 

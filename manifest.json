@@ -1,6 +1,6 @@
 {
-	"id": "swipe-gesture-commands",
-	"name": "Swipe Gesture Commands",
+	"id": "horizontal-swipe-gestures",
+	"name": "Horizontal Swipe Gestures",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
 	"description": "Two-finger trackpad swipes mapped to any command.",

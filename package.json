@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-swipe-gesture-commands",
+	"name": "obsidian-horizontal-swipe-gestures",
 	"version": "1.0.0",
 	"description": "Two-finger swipe gestures mapped to any Obsidian command.",
 	"main": "main.js",
