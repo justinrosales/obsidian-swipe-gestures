@@ -25,3 +25,7 @@
 	transition: opacity 200ms ease-out;
 	opacity: 0;
 }
+
+.swipe-gesture-value-input {
+	width: 3.5em;
+}

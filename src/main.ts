@@ -203,7 +203,7 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 			.addText((t) => {
 				text = t;
 				t.inputEl.type = "number";
-				t.inputEl.style.width = "3.5em";
+				t.inputEl.addClass("swipe-gesture-value-input");
 				t.setValue(opts.get().toFixed(decimals)).onChange(async (v) => {
 					const num = Number(v);
 					if (Number.isNaN(num)) return;
