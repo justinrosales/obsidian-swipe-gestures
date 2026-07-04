@@ -194,6 +194,9 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 					.setLimits(min, max, step)
 					.setValue(opts.get())
 					.setDynamicTooltip()
+					// Only commit on release, not on every drag tick,
+					// otherwise each pixel of movement writes settings to disk and the drag feels laggy.
+					.setInstant(false)
 					.onChange(async (v) => {
 						opts.set(v);
 						text.setValue(v.toFixed(decimals));
@@ -203,8 +206,10 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 			.addText((t) => {
 				text = t;
 				t.inputEl.type = "number";
+				t.inputEl.step = String(step);
 				t.inputEl.addClass("swipe-gesture-value-input");
 				t.setValue(opts.get().toFixed(decimals)).onChange(async (v) => {
+					if (v.trim() === "") return; // still typing — don't snap to min yet
 					const num = Number(v);
 					if (Number.isNaN(num)) return;
 					const clamped = Math.min(max, Math.max(min, num));
