@@ -2,7 +2,7 @@
 	"id": "horizontal-swipe-gestures",
 	"name": "Horizontal Swipe Gestures",
 	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
+	"minAppVersion": "1.6.6",
 	"description": "Two-finger trackpad swipes mapped to any command.",
 	"author": "Justin Rosales",
 	"authorUrl": "https://github.com/justinrosales",
