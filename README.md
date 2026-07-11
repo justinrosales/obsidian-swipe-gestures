@@ -53,10 +53,6 @@ Then reload Obsidian and enable the plugin.
 | **Swipe sensitivity** | How light a swipe needs to be to trigger. Low = fires on a light flick, High = requires a more deliberate swipe |
 | **Horizontal dominance** | How purely horizontal the swipe must be. Low = diagonal swipes count, High = only straight left/right swipes count |
 
-## Author
-
-[justinrosales](https://github.com/justinrosales)
-
 ## Credits
 
 Built on the [Obsidian Sample Plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template.
