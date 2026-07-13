@@ -61,7 +61,7 @@ export default class SwipeGesturesPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.registerDomEvent(
-			document,
+			activeDocument,
 			"wheel",
 			(evt: WheelEvent) => this.handleWheel(evt),
 			{ capture: true, passive: true }
@@ -107,7 +107,7 @@ export default class SwipeGesturesPlugin extends Plugin {
 
 	private showOverlay(direction: "left" | "right") {
 		if (!this.overlayEl) {
-			this.overlayEl = document.body.createDiv({
+			this.overlayEl = activeDocument.body.createDiv({
 				attr: { id: "swipe-gesture-overlay" },
 			});
 		}
@@ -193,7 +193,6 @@ class SwipeGestureSettingTab extends PluginSettingTab {
 				slider = s
 					.setLimits(min, max, step)
 					.setValue(opts.get())
-					.setDynamicTooltip()
 					// Only commit on release, not on every drag tick,
 					// otherwise each pixel of movement writes settings to disk and the drag feels laggy.
 					.setInstant(false)
