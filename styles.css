@@ -1,29 +1,49 @@
 #swipe-gesture-overlay {
+	--swipe-progress: 0;
+	--swipe-flip: 1;
 	position: fixed;
 	top: 50%;
-	transform: translateY(-50%);
-	width: 44px;
-	height: 96px;
+	width: 36px;
+	height: 88px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 22px;
-	color: rgba(255, 255, 255, 0.95);
-	background: rgba(28, 28, 30, 0.82);
+	color: #fff;
+	background: rgba(20, 20, 22, 0.92);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 	pointer-events: none;
 	z-index: 99999;
-	opacity: 0;
-	transition: opacity 80ms ease-out;
+	opacity: var(--swipe-opacity, 0);
+	will-change: transform, opacity;
 }
 
-#swipe-gesture-overlay.left  { border-radius: 0 48px 48px 0; }
-#swipe-gesture-overlay.right { border-radius: 48px 0 0 48px; }
-#swipe-gesture-overlay.visible  { opacity: 1; }
-#swipe-gesture-overlay.fade-out {
-	transition: opacity 200ms ease-out;
-	opacity: 0;
+#swipe-gesture-overlay.left {
+	left: 0;
+	right: auto;
+	--swipe-flip: -1;
+	border-radius: 0 44px 44px 0;
+	transform: translate3d(calc(-110% + (var(--swipe-progress) * 110%)), -50%, 0);
+}
+
+#swipe-gesture-overlay.right {
+	right: 0;
+	left: auto;
+	--swipe-flip: 1;
+	border-radius: 44px 0 0 44px;
+	transform: translate3d(calc(110% - (var(--swipe-progress) * 110%)), -50%, 0);
+}
+
+#swipe-gesture-overlay.settling {
+	transition: transform 180ms ease-out, opacity 180ms ease-out;
+}
+
+.swipe-gesture-chevron {
+	width: 22px;
+	height: 22px;
+	overflow: visible;
+	transform: scaleX(var(--swipe-flip)) scale(calc(0.72 + (var(--swipe-progress) * 0.28)));
 }
 
 .swipe-gesture-value-input {
