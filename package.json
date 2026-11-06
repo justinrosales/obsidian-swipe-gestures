@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-horizontal-swipe-gestures",
-	"version": "1.0.1",
+	"version": "1.1.1",
 	"description": "Two-finger swipe gestures mapped to any Obsidian command.",
 	"main": "main.js",
 	"type": "module",
@@ -8,7 +8,8 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"test": "node --experimental-strip-types --test src/gesture.test.ts"
 	},
 	"keywords": [],
 	"license": "0-BSD",
