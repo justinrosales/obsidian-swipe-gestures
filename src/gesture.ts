@@ -1,6 +1,14 @@
 export const TRACK_QUIET_MS = 80;
 export const MOMENTUM_LOCK_MS = 450;
 
+/** A swipe at least this big can be followed by a coast we should ignore. */
+const COAST_PEAK_MIN = 8;
+/** A tick this small relative to the peak starts the coast suspicion. */
+const COAST_START_RATIO = 0.55;
+/** Confirm the coast once a later tick is this small. */
+const COAST_CONFIRM_RATIO = 0.45;
+const COAST_CONFIRM_TICKS = 2;
+
 export type SwipeDirection = "left" | "right";
 export type GesturePhase = "idle" | "tracking" | "locked";
 
@@ -53,9 +61,17 @@ export class SwipeGesture {
 	private direction: SwipeDirection | null = null;
 	private distance = 0;
 	private config: GestureConfig;
+	private peakMag = 0;
+	private lastUserMag = 0;
+	private coastHeld: number[] = [];
+	private coasting = false;
 
 	constructor(config: GestureConfig) {
 		this.config = config;
+	}
+
+	get isIdle(): boolean {
+		return this.phase === "idle";
 	}
 
 	setConfig(config: GestureConfig): void {
@@ -82,6 +98,7 @@ export class SwipeGesture {
 			this.phase = "tracking";
 			this.direction = resolveDirection(deltaX, this.config.invert);
 			this.distance = 0;
+			this.clearCoast();
 		}
 
 		if (this.direction === null) {
@@ -89,25 +106,52 @@ export class SwipeGesture {
 		}
 
 		const toward = signedToward(this.direction, deltaX, this.config.invert);
-		this.distance = Math.max(0, this.distance + toward);
-		return this.decide({
-			preventDefault: true,
-			quietMs: TRACK_QUIET_MS,
-		});
+		const mag = Math.abs(deltaX);
+		const tracking = { preventDefault: true, quietMs: TRACK_QUIET_MS };
+
+		// Finger reversed. Drop the uncommitted coast and scrub the arrow back.
+		if (toward < 0) {
+			this.clearCoast();
+			this.peakMag = mag;
+			this.lastUserMag = mag;
+			this.distance = Math.max(0, this.distance + toward);
+			return this.decide(tracking);
+		}
+
+		if (this.coasting) {
+			if (mag > this.peakMag * COAST_START_RATIO) {
+				for (const held of this.coastHeld) this.distance += held;
+				this.coastHeld = [];
+				this.coasting = false;
+				this.distance += toward;
+				this.peakMag = Math.max(this.peakMag, mag);
+				this.lastUserMag = mag;
+				return this.decide(tracking);
+			}
+			this.coastHeld.push(toward);
+			const confirmed = this.coastHeld.length >= COAST_CONFIRM_TICKS
+				&& mag <= this.peakMag * COAST_CONFIRM_RATIO;
+			if (confirmed) return this.finishTracking(true);
+			return this.decide(tracking);
+		}
+
+		const coastStarted = this.peakMag >= COAST_PEAK_MIN
+			&& mag <= this.peakMag * COAST_START_RATIO
+			&& mag < this.lastUserMag;
+		if (coastStarted) {
+			this.coasting = true;
+			this.coastHeld = [toward];
+			return this.decide(tracking);
+		}
+
+		this.distance += toward;
+		this.peakMag = Math.max(this.peakMag, mag);
+		this.lastUserMag = mag;
+		return this.decide(tracking);
 	}
 
 	onQuiet(): GestureDecision {
-		if (this.phase === "tracking") {
-			const full = this.distance >= commitDistance(this.config.minDeltaX);
-			this.phase = "locked";
-			return this.decide({
-				commit: full,
-				cancel: !full,
-				preventDefault: false,
-				quietMs: MOMENTUM_LOCK_MS,
-				progress: full ? 1 : undefined,
-			});
-		}
+		if (this.phase === "tracking") return this.finishTracking(false);
 
 		if (this.phase === "locked") {
 			this.reset();
@@ -124,6 +168,30 @@ export class SwipeGesture {
 		return absX > absY * this.config.dominanceRatio;
 	}
 
+	/**
+	 * Finger-up, either because wheel events went quiet or because the
+	 * inertial tail started. Distance does not include that tail.
+	 */
+	private finishTracking(preventDefault: boolean): GestureDecision {
+		const full = this.distance >= commitDistance(this.config.minDeltaX);
+		this.phase = "locked";
+		this.clearCoast();
+		return this.decide({
+			commit: full,
+			cancel: !full,
+			preventDefault,
+			quietMs: MOMENTUM_LOCK_MS,
+			progress: full ? 1 : undefined,
+		});
+	}
+
+	private clearCoast() {
+		this.peakMag = 0;
+		this.lastUserMag = 0;
+		this.coastHeld = [];
+		this.coasting = false;
+	}
+
 	private progress(): number {
 		const span = commitDistance(this.config.minDeltaX);
 		if (span <= 0) return 0;
@@ -134,6 +202,7 @@ export class SwipeGesture {
 		this.phase = "idle";
 		this.direction = null;
 		this.distance = 0;
+		this.clearCoast();
 	}
 
 	private decide(partial: {

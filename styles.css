@@ -1,26 +1,25 @@
 #swipe-gesture-overlay {
 	--swipe-progress: 0;
 	--swipe-flip: 1;
+	--swipe-size: 36px;
+	--swipe-edge: 0px;
+	--swipe-center: 50%;
 	position: fixed;
-	top: 50%;
-	width: 36px;
+	top: var(--swipe-center);
+	width: var(--swipe-size);
 	height: 88px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: #fff;
-	background: rgba(20, 20, 22, 0.92);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+	background-color: rgba(28, 28, 30, 0.94);
 	pointer-events: none;
 	z-index: 99999;
 	opacity: var(--swipe-opacity, 0);
-	will-change: transform, opacity;
 }
 
 #swipe-gesture-overlay.left {
-	left: 0;
+	left: var(--swipe-edge);
 	right: auto;
 	--swipe-flip: -1;
 	border-radius: 0 44px 44px 0;
@@ -28,8 +27,8 @@
 }
 
 #swipe-gesture-overlay.right {
-	right: 0;
-	left: auto;
+	left: calc(var(--swipe-edge) - var(--swipe-size));
+	right: auto;
 	--swipe-flip: 1;
 	border-radius: 44px 0 0 44px;
 	transform: translate3d(calc(110% - (var(--swipe-progress) * 110%)), -50%, 0);

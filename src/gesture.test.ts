@@ -138,6 +138,74 @@ void test("the momentum tail cannot start a second navigation", () => {
 	assert.equal(second.commit, true);
 });
 
+void test("pulling back under the threshold does not navigate on release", () => {
+	const swipe = gesture();
+	swipe.onWheel(-50, 0);
+	const back = swipe.onWheel(30, 0);
+	assert.equal(back.phase, "tracking");
+	assert.equal(back.commit, false);
+	assert.ok(Math.abs(back.progress - 20 / 45) < 1e-9);
+
+	const settled = swipe.onQuiet();
+	assert.equal(settled.cancel, true);
+	assert.equal(settled.commit, false);
+	assert.equal(settled.phase, "locked");
+});
+
+void test("a flick commits when the coast starts, without waiting out the tail", () => {
+	const swipe = gesture();
+	swipe.onWheel(-40, 0);
+	swipe.onWheel(-30, 0);
+	const suspect = swipe.onWheel(-10, 0);
+	assert.equal(suspect.phase, "tracking");
+	assert.equal(suspect.commit, false);
+	assert.equal(suspect.progress, 1);
+
+	const released = swipe.onWheel(-6, 0);
+	assert.equal(released.commit, true);
+	assert.equal(released.cancel, false);
+	assert.equal(released.phase, "locked");
+	assert.equal(released.progress, 1);
+
+	const tail = swipe.onWheel(-3, 0);
+	assert.equal(tail.commit, false);
+	assert.equal(tail.phase, "locked");
+});
+
+void test("a short flick's coast cancels instead of borrowing inertia", () => {
+	const swipe = gesture();
+	swipe.onWheel(-20, 0);
+	swipe.onWheel(-8, 0);
+	const released = swipe.onWheel(-4, 0);
+	assert.equal(released.cancel, true);
+	assert.equal(released.commit, false);
+	assert.ok(Math.abs(released.progress - 20 / 45) < 1e-9);
+});
+
+void test("a modest swipe still ends when its coast starts", () => {
+	const swipe = gesture();
+	swipe.onWheel(-12, 0);
+	const suspect = swipe.onWheel(-4, 0);
+	assert.equal(suspect.commit, false);
+	assert.equal(suspect.cancel, false);
+	assert.equal(suspect.phase, "tracking");
+
+	const released = swipe.onWheel(-2, 0);
+	assert.equal(released.cancel, true);
+	assert.equal(released.commit, false);
+	assert.ok(Math.abs(released.progress - 12 / 45) < 1e-9);
+});
+
+void test("slowing down and pulling again keeps the gesture open", () => {
+	const swipe = gesture();
+	swipe.onWheel(-40, 0);
+	swipe.onWheel(-10, 0);
+	const again = swipe.onWheel(-36, 0);
+	assert.equal(again.phase, "tracking");
+	assert.equal(again.commit, false);
+	assert.equal(again.progress, 1);
+});
+
 void test("a vertical tick during tracking does not clear the pending quiet gap", () => {
 	const swipe = gesture();
 	swipe.onWheel(-15, 0);

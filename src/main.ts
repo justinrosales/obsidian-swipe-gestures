@@ -1,5 +1,6 @@
 import {
 	App,
+	ItemView,
 	Plugin,
 	PluginSettingTab,
 	Setting,
@@ -12,8 +13,6 @@ import {
 	type GestureDecision,
 	type SwipeDirection,
 } from "./gesture";
-
-const COMMIT_HOLD_MS = 160;
 
 /* -------------------------------------------------------------------------- */
 /*  Obsidian internals                                                         */
@@ -70,6 +69,8 @@ export default class SwipeGesturesPlugin extends Plugin {
 	private indicator: HTMLDivElement | null = null;
 	private quietTimer: number | null = null;
 	private commandTimer: number | null = null;
+	private anchorEdge: number | null = null;
+	private anchorCenter: number | null = null;
 	private unloaded = false;
 
 	async onload() {
@@ -92,6 +93,7 @@ export default class SwipeGesturesPlugin extends Plugin {
 	}
 
 	private handleWheel(evt: WheelEvent) {
+		if (this.gesture.isIdle && !this.isEventInNote(evt)) return;
 		this.gesture.setConfig({
 			minDeltaX: this.settings.minDeltaX,
 			dominanceRatio: this.settings.dominanceRatio,
@@ -101,10 +103,7 @@ export default class SwipeGesturesPlugin extends Plugin {
 	}
 
 	private apply(frame: GestureDecision, evt?: WheelEvent) {
-		if (evt && frame.preventDefault && evt.cancelable) {
-			evt.preventDefault();
-			evt.stopPropagation();
-		}
+		if (evt && frame.preventDefault && evt.cancelable) evt.preventDefault();
 		if (frame.quietMs !== null) this.armQuiet(frame.quietMs);
 
 		const doc = evt?.view?.document ?? this.indicator?.ownerDocument ?? activeDocument;
@@ -139,13 +138,15 @@ export default class SwipeGesturesPlugin extends Plugin {
 		el.classList.add("settling", "commit");
 		this.place(el, direction, 1, 1);
 		this.clearCommandTimer();
+		// Leave the wheel event before swapping the note, so the sidebar
+		// does not repaint underneath the gesture. The wait is one turn.
 		this.commandTimer = window.setTimeout(() => {
 			this.commandTimer = null;
 			if (this.unloaded) return;
 			if (commandId) getCommandsManager(this.app).executeCommandById(commandId);
 			el.classList.add("fade-out");
 			el.setCssProps({ "--swipe-opacity": "0" });
-		}, COMMIT_HOLD_MS);
+		}, 0);
 	}
 
 	private playCancel(doc: Document, direction: SwipeDirection, progress: number) {
@@ -168,9 +169,14 @@ export default class SwipeGesturesPlugin extends Plugin {
 	) {
 		el.classList.toggle("left", direction === "left");
 		el.classList.toggle("right", direction === "right");
+		if (this.anchorEdge === null || this.anchorCenter === null) {
+			this.captureAnchor(direction);
+		}
 		el.setCssProps({
 			"--swipe-progress": progress.toFixed(4),
 			"--swipe-opacity": String(opacity),
+			"--swipe-edge": `${this.anchorEdge ?? 0}px`,
+			"--swipe-center": `${this.anchorCenter ?? 0}px`,
 		});
 	}
 
@@ -202,8 +208,36 @@ export default class SwipeGesturesPlugin extends Plugin {
 		return el;
 	}
 
+	private noteContent(): HTMLElement | null {
+		const view = this.app.workspace.getActiveViewOfType(ItemView);
+		if (!view) return null;
+		const content = view.containerEl.querySelector(".view-content");
+		return content instanceof HTMLElement ? content : view.containerEl;
+	}
+
+	private isEventInNote(evt: WheelEvent): boolean {
+		const content = this.noteContent();
+		const target = evt.target;
+		return content !== null && target instanceof Node && content.contains(target);
+	}
+
+	private captureAnchor(direction: SwipeDirection) {
+		const content = this.noteContent();
+		const view = content?.ownerDocument.defaultView ?? window;
+		if (!content) {
+			this.anchorEdge = direction === "left" ? 0 : view.innerWidth;
+			this.anchorCenter = view.innerHeight / 2;
+			return;
+		}
+		const bounds = content.getBoundingClientRect();
+		this.anchorEdge = direction === "left" ? bounds.left : bounds.right;
+		this.anchorCenter = bounds.top + bounds.height / 2;
+	}
+
 	private parkIndicator() {
 		const el = this.indicator;
+		this.anchorEdge = null;
+		this.anchorCenter = null;
 		if (!el) return;
 		el.classList.remove("settling", "commit", "cancel", "fade-out", "left", "right");
 		el.setCssProps({
